@@ -214,11 +214,17 @@ to setup-population
     setup-initial-techs
     ;set label (word array:to-list techs)
     set cur-terrain [terrain] of patch-here
-    set fitness agent-fitness self
+    ;;set fitness agent-fitness self
     set target-patch patch-here
     set move-memory-pos 0
     set move-memory array:from-list n-values move-memory-length [[]]
   ]
+
+  ask my-agents [
+   ;; set up fitness after agents are set up, otherwise social fitness will not work.
+   set fitness agent-fitness self
+  ]
+
   set labels-on false
   toggle-labels
   setup-links
@@ -1625,7 +1631,7 @@ CHOOSER
 Agent-Movement-Method
 Agent-Movement-Method
 "Static" "Random walk" "Star base" "Around base" "Mostly memory" "Mostly good memory"
-4
+3
 
 BUTTON
 386
