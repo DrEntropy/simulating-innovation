@@ -44,12 +44,12 @@ globals [
 
 
 
-breed [myagents myagent]
+breed [my-agents my-agent]
 undirected-link-breed [nlinks nlink] ; Neighbours close enough to imitate each other
 
 
 
-myagents-own [
+my-agents-own [
   home-patch
   target-patch
   move-memory
@@ -88,10 +88,10 @@ to setup
   random-seed last-seed-sim
 
   setup-population
-  set init-num-satisfied (count myagents with [fitness = total-constraints])
-  set init-mean-fitness (mean [fitness] of myagents)
-  set init-max-fitness (max [fitness] of myagents)
-  set init-min-fitness (min [fitness] of myagents)
+  set init-num-satisfied (count my-agents with [fitness = total-constraints])
+  set init-mean-fitness (mean [fitness] of my-agents)
+  set init-max-fitness (max [fitness] of my-agents)
+  set init-min-fitness (min [fitness] of my-agents)
 
   update-stats
   my-setup-plots
@@ -202,7 +202,7 @@ end
 
 to setup-population
   ;set move-memory-length 10
-  create-myagents initial-population [
+  create-my-agents initial-population [
     setxy random-xcor random-ycor
     if landscape-type = "World" [
       while [[terrain = 0] of patch-here] [setxy random-xcor random-ycor] ; Don't base yourself on water.
@@ -225,7 +225,7 @@ to setup-population
   toggle-links
 
   set techs-count array:from-list (n-values number-of-techs [0])
-  ask myagents [set techs-count array:from-list (map [[val1 val2 ] -> val1 + val2] (array:to-list techs-count) (array:to-list techs))]
+  ask my-agents [set techs-count array:from-list (map [[val1 val2 ] -> val1 + val2] (array:to-list techs-count) (array:to-list techs))]
 end
 
 to setup-initial-techs
@@ -243,7 +243,7 @@ end
 
 to toggle-labels
   set labels-on (not labels-on)
-  ask myagents [
+  ask my-agents [
     ifelse labels-on [
       set label (word array:to-list techs)
     ]
@@ -406,7 +406,7 @@ to-report ksat-fitness [given-agent]
   ; Social constraints
   if 0 < length sconstraints [
     set disjoined-techs array:from-list map [? -> ?] (array:to-list techs)
-    ask myagents in-radius imitation-radius [set disjoined-techs array:from-list (map [[x y] -> ifelse-value (x = y) [x] [x + y]] (array:to-list techs) (array:to-list disjoined-techs))]
+    ask my-agents in-radius imitation-radius [set disjoined-techs array:from-list (map [[x y] -> ifelse-value (x = y) [x] [x + y]] (array:to-list techs) (array:to-list disjoined-techs))]
     foreach sconstraints [ x ->
       ; i.e. for each constraint in the set that goes with current terrain
       set cval 1
@@ -532,7 +532,7 @@ to output-best-fitness
   let tnum 0
   print ""
   print "Outputting best fitness values and first optimal solution:"
-  create-myagents 1 [
+  create-my-agents 1 [
     set techs array:from-list (n-values number-of-techs [0])
     repeat number-of-agent-types [
       set agent-type tnum
@@ -623,7 +623,7 @@ to go
   ; Agents move around
   ; and may invent, discard / forget, or imitate from nearby agents technologies.
   let temp-terrain 0
-  ask myagents [
+  ask my-agents [
     agent-move
 
     set temp-terrain [terrain] of patch-here
@@ -650,17 +650,17 @@ to go
 end
 
 to update-stats
-  set num-satisfied (count myagents with [fitness = total-constraints])
-  ask myagents [set cur-num-techs (sum array:to-list techs)]
-  set mean-num-techs (mean [cur-num-techs] of myagents)
-  set max-num-techs (max [cur-num-techs] of myagents)
-  set min-num-techs (min [cur-num-techs] of myagents)
+  set num-satisfied (count my-agents with [fitness = total-constraints])
+  ask my-agents [set cur-num-techs (sum array:to-list techs)]
+  set mean-num-techs (mean [cur-num-techs] of my-agents)
+  set max-num-techs (max [cur-num-techs] of my-agents)
+  set min-num-techs (min [cur-num-techs] of my-agents)
   set mean-num-adopters (mean array:to-list techs-count)
   set max-num-adopters (max array:to-list techs-count)
   set min-num-adopters (min array:to-list techs-count)
-  set mean-fitness (mean [fitness] of myagents)
-  set max-fitness (max [fitness] of myagents)
-  set min-fitness (min [fitness] of myagents)
+  set mean-fitness (mean [fitness] of my-agents)
+  set max-fitness (max [fitness] of my-agents)
+  set min-fitness (min [fitness] of my-agents)
 end
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -826,7 +826,7 @@ end
 to flash-invention
   ; Initiates an invention event
   ; Called by button
-  ask one-of myagents [invention]
+  ask one-of my-agents [invention]
 end
 
 to discard
@@ -884,7 +884,7 @@ end
 to adopt-and-adapt
   ; Current agent imitates one of the agents within a given radius of it.
   ; A multi-bit word may be copied - with possibility of adaptation or error
-  let imitated one-of myagents in-radius imitation-radius
+  let imitated one-of my-agents in-radius imitation-radius
   if imitated != nobody [
     let selected-tech ((random (number-of-techs / size-of-complex-techs)) * size-of-complex-techs)
     if (compare-bits self imitated selected-tech size-of-complex-techs) < size-of-complex-techs [
@@ -934,8 +934,8 @@ end
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 to setup-links
-  ask myagents [
-    ask other myagents [
+  ask my-agents [
+    ask other my-agents [
       create-nlink-with myself [
         set hidden? true
         set color white
@@ -1015,7 +1015,7 @@ to my-update-plots
   plotxy ticks min-fitness
 
   set-current-plot "Fitness Distribution"
-  histogram [fitness] of myagents
+  histogram [fitness] of my-agents
 
   set-current-plot "Number of Fully Satisfied Agents"
   plotxy ticks num-satisfied
