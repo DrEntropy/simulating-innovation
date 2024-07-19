@@ -20,28 +20,28 @@ globals [
   a-dos ; degree of separation in alliance net via most likely path
   a-freq ; frequency of alliance attempts
   a-prob ; best probability of activating path to each node
-  node-queue ; Used for dos calculations  
+  node-queue ; Used for dos calculations
   node-queue-start
   node-queue-length
-  
+
   ordered-firms
   ordered-firms-array
   decay
-  
+
   num-additions
   sum-additions
   mean-additions
-  
+
   mean-knowledge
   prev-mean-knowledge
-  
+
   num-alinks
   num-components
   max-component
   net-constraint
   clust-coeff
   assortativity
-  
+
   net-density
   net-diameter
   mean-degree
@@ -59,7 +59,7 @@ globals [
 
   mean-constraint
   min-constraint
-  max-constraint  
+  max-constraint
   mean-betweenness
   min-betweenness
   max-betweenness
@@ -67,7 +67,7 @@ globals [
   mean-closeness
   min-closeness
   max-closeness
-  
+
   degree-centralization
   closeness-centralization
 ]
@@ -77,15 +77,15 @@ undirected-link-breed [alinks alink]
 
 firms-own [
   knowledge
-  
+
   num-successes
   num-self-successes
-  
+
   e-partners
   a-partners
   matched
   max-exp-ret
-  
+
   ; Network related
   degree
   constraint
@@ -113,28 +113,28 @@ to setup
   setup-firms
   set ordered-firms sort firms
   set ordered-firms-array array:from-list ordered-firms
-  set expected-returns matrix:make-constant number-of-firms number-of-firms 0 
-  set probability-success matrix:make-constant number-of-firms number-of-firms 0 
-  set total-credit matrix:make-constant number-of-firms number-of-firms 0 
-  set structural-credit matrix:make-constant number-of-firms number-of-firms 0 
-  set relational-credit matrix:make-constant number-of-firms number-of-firms 0 
-  set created-knowledge matrix:make-constant number-of-firms number-of-firms 0 
-  set a-outcome matrix:make-constant number-of-firms number-of-firms 0 
-  set a-time matrix:make-constant number-of-firms number-of-firms 0 
-  set a-freq matrix:make-constant number-of-firms number-of-firms 0 
+  set expected-returns matrix:make-constant number-of-firms number-of-firms 0
+  set probability-success matrix:make-constant number-of-firms number-of-firms 0
+  set total-credit matrix:make-constant number-of-firms number-of-firms 0
+  set structural-credit matrix:make-constant number-of-firms number-of-firms 0
+  set relational-credit matrix:make-constant number-of-firms number-of-firms 0
+  set created-knowledge matrix:make-constant number-of-firms number-of-firms 0
+  set a-outcome matrix:make-constant number-of-firms number-of-firms 0
+  set a-time matrix:make-constant number-of-firms number-of-firms 0
+  set a-freq matrix:make-constant number-of-firms number-of-firms 0
   set a-dos matrix:make-constant number-of-firms number-of-firms (number-of-firms + 1)
   set node-queue array:from-list n-values number-of-firms [nobody]
   set a-prob array:from-list n-values number-of-firms [nobody]
-  
+
   set mean-additions 0
   set num-additions 0
   set sum-additions 0
   set mean-knowledge 0
-  set prev-mean-knowledge 0 
-  
+  set prev-mean-knowledge 0
+
   calc-metrics
   my-update-plots
-  
+
 end
 
 to setup-firms
@@ -146,7 +146,7 @@ to setup-firms
     set num-self-successes 0
   ]
   reposition-nodes-grid
-  
+
 end
 
 to setup-decay
@@ -163,9 +163,9 @@ end
 ; Iterations
 to go
   if ticks = number-of-time-steps [stop]
-  
+
   tick
-  
+
   ; calc expected returns from alliances
   calc-relational-credit
   calc-structural-credit
@@ -179,7 +179,7 @@ to go
   if (0 = ticks mod output-every) [
     calc-wdos
     recreate-net
-    
+
     calc-metrics
     my-update-plots
     if reposition-nodes [reposition-nodes-spring]
@@ -191,8 +191,8 @@ to calc-relational-credit
   let ego-id 0
   let alter-id 0
   let last-outcome 0
-  foreach ordered-firms [
-    set ego-id [who] of ?
+  foreach ordered-firms [ ?1 ->
+    set ego-id [who] of ?1
     set alter-id ego-id
     repeat ((count firms) - ego-id - 1) [
       set alter-id alter-id + 1
@@ -210,16 +210,16 @@ to calc-structural-credit
   let alter-id 0
   let tertius 0
   let sc-sum 0
-  foreach ordered-firms [
-    set ego-id [who] of ?
+  foreach ordered-firms [ ?1 ->
+    set ego-id [who] of ?1
     set alter-id ego-id
     repeat ((count firms) - ego-id - 1) [
       set alter-id alter-id + 1
     ;foreach sublist ordered-firms ego-id (length ordered-firms) [
       ;set alter-id [who] of ?
       set sc-sum 0
-      foreach ordered-firms [
-        set tertius [who] of ?
+      foreach ordered-firms [ ??1 ->
+        set tertius [who] of ??1
         if ego-id != tertius [
           if alter-id != tertius [
             set sc-sum sc-sum + ((matrix:get relational-credit ego-id tertius) * (matrix:get relational-credit tertius alter-id))
@@ -236,16 +236,16 @@ to calc-total-credit
   let ego-id 0
   let alter-id 0
   let o-sum 0
-  foreach ordered-firms [
-    set ego-id [who] of ?
+  foreach ordered-firms [ ?1 ->
+    set ego-id [who] of ?1
     set o-sum (sum matrix:get-row a-outcome ego-id) - (matrix:get a-outcome ego-id ego-id)
-    foreach ordered-firms [
-      set alter-id [who] of ?
+    foreach ordered-firms [ ??1 ->
+      set alter-id [who] of ??1
       ifelse o-sum = 0 [
         matrix:set total-credit ego-id alter-id 0
       ]
       [
-        matrix:set total-credit ego-id alter-id 
+        matrix:set total-credit ego-id alter-id
          ((alpha * (matrix:get relational-credit ego-id alter-id) ) + ((1 - alpha) * (matrix:get structural-credit ego-id alter-id) / o-sum))
       ]
     ]
@@ -256,11 +256,11 @@ to calc-probability-success
   let ego-id 0
   let alter-id 0
   let prob-range (max-probability-success - min-probability-success)
-  foreach ordered-firms [
-    set ego-id [who] of ?
-    foreach ordered-firms [
-      set alter-id [who] of ?
-      matrix:set probability-success ego-id alter-id 
+  foreach ordered-firms [ ?1 ->
+    set ego-id [who] of ?1
+    foreach ordered-firms [ ??1 ->
+      set alter-id [who] of ??1
+      matrix:set probability-success ego-id alter-id
        (min-probability-success + (prob-range * (matrix:get total-credit ego-id alter-id)))
     ]
   ]
@@ -272,20 +272,20 @@ to calc-created-knowledge
   let alter-id 0
   let sum-total 0
   let k-element 0
-  foreach ordered-firms [
-    set ego-id [who] of ?
-    set ego ?
-    foreach sublist ordered-firms ego-id (length ordered-firms) [
-      set alter-id [who] of ?
+  foreach ordered-firms [ ?1 ->
+    set ego-id [who] of ?1
+    set ego ?1
+    foreach sublist ordered-firms ego-id (length ordered-firms) [ ??1 ->
+      set alter-id [who] of ??1
 
       set sum-total 0
       set k-element 0
       repeat number-of-knowledge-types [
-        set sum-total sum-total + ((knowledge-element ego ? k-element) ^ K-Type-Substitution)
+        set sum-total sum-total + ((knowledge-element ego ??1 k-element) ^ K-Type-Substitution)
         set k-element k-element + 1
       ]
-      
-      matrix:set created-knowledge ego-id alter-id 
+
+      matrix:set created-knowledge ego-id alter-id
        (k-production-scale * (sum-total ^ (1 / K-Type-Substitution)))
       matrix:set created-knowledge alter-id ego-id (matrix:get created-knowledge ego-id alter-id)
     ]
@@ -295,7 +295,7 @@ end
 to-report knowledge-element [ego alter k-element]
   let ego-val [array:item knowledge k-element] of ego
   let alter-val [array:item knowledge k-element] of alter
-  
+
   report ifelse-value (ego-val < alter-val) [
     (((1 - theta) * ego-val) + (theta * alter-val))
   ]
@@ -307,11 +307,11 @@ end
 to calc-expected-returns
   let ego-id 0
   let alter 0
-  foreach ordered-firms [
-    set ego-id [who] of ?
-    foreach ordered-firms [
-      set alter [who] of ?
-      matrix:set expected-returns ego-id alter 
+  foreach ordered-firms [ ?1 ->
+    set ego-id [who] of ?1
+    foreach ordered-firms [ ??1 ->
+      set alter [who] of ??1
+      matrix:set expected-returns ego-id alter
        (matrix:get probability-success ego-id alter) * (matrix:get created-knowledge ego-id alter)
     ]
   ]
@@ -321,11 +321,11 @@ end
 to calc-matching
   let ego nobody
   let alter nobody
-  let unmatched-firms map [?] ordered-firms
-  
+  let unmatched-firms map [ ?1 -> ?1 ] ordered-firms
+
   set num-additions 0
   set sum-additions 0
-  
+
   let evaluator-id 0
   ask firms [
     set matched false
@@ -334,26 +334,26 @@ to calc-matching
   ]
   ask firms [
     set evaluator-id who
-;    set max-exp-ret max matrix:get-row expected-returns evaluator-id 
+;    set max-exp-ret max matrix:get-row expected-returns evaluator-id
     set max-exp-ret -1
-    foreach unmatched-firms [
-      if max-exp-ret <= [matrix:get expected-returns evaluator-id who] of ? [
-        ifelse max-exp-ret < [matrix:get expected-returns evaluator-id who] of ? [
-          set max-exp-ret [matrix:get expected-returns evaluator-id who] of ?
-          set e-partners (list ?)
+    foreach unmatched-firms [ ?1 ->
+      if max-exp-ret <= [matrix:get expected-returns evaluator-id who] of ?1 [
+        ifelse max-exp-ret < [matrix:get expected-returns evaluator-id who] of ?1 [
+          set max-exp-ret [matrix:get expected-returns evaluator-id who] of ?1
+          set e-partners (list ?1)
         ]
         [
-          set e-partners fput ? e-partners
+          set e-partners fput ?1 e-partners
         ]
       ]
     ]
   ]
   ask firms [
-    foreach e-partners [
-      ask ? [set a-partners fput myself a-partners]
+    foreach e-partners [ ?1 ->
+      ask ?1 [set a-partners fput myself a-partners]
     ]
   ]
-  
+
   let num-matched 0
   while [num-matched < number-of-firms] [
     set ego max-one-of (firms with [not matched]) [max-exp-ret]
@@ -368,31 +368,31 @@ to calc-matching
       set unmatched-firms remove alter unmatched-firms
       set num-matched num-matched + 2
     ]
-    
+
     attempt-innovation ego alter
     ask ego [
-      foreach a-partners [
-        ask ? [
+      foreach a-partners [ ?1 ->
+        ask ?1 [
           if not matched [
             set e-partners remove myself e-partners
             if 0 = length e-partners [
               set evaluator-id who
               set max-exp-ret -1
-              foreach unmatched-firms [
-                if [not matched] of ? [
-                  if max-exp-ret <= [matrix:get expected-returns evaluator-id who] of ? [
-                    ifelse max-exp-ret < [matrix:get expected-returns evaluator-id who] of ? [
-                      set max-exp-ret [matrix:get expected-returns evaluator-id who] of ?
-                      set e-partners (list ?)
+              foreach unmatched-firms [ ??1 ->
+                if [not matched] of ??1 [
+                  if max-exp-ret <= [matrix:get expected-returns evaluator-id who] of ??1 [
+                    ifelse max-exp-ret < [matrix:get expected-returns evaluator-id who] of ??1 [
+                      set max-exp-ret [matrix:get expected-returns evaluator-id who] of ??1
+                      set e-partners (list ??1)
                     ]
                     [
-                      set e-partners fput ? e-partners
+                      set e-partners fput ??1 e-partners
                     ]
                   ]
                 ]
               ]
-              foreach e-partners [
-                ask ? [
+              foreach e-partners [ ??1 ->
+                ask ??1 [
                   set a-partners fput myself a-partners
                 ]
               ]
@@ -402,28 +402,28 @@ to calc-matching
       ]
     ]
     ask alter [
-      foreach a-partners [
-        ask ? [
+      foreach a-partners [ ?1 ->
+        ask ?1 [
           if not matched [
             set e-partners remove myself e-partners
             if 0 = length e-partners [
               set evaluator-id who
               set max-exp-ret -1
-              foreach unmatched-firms [
-                if [not matched] of ? [
-                  if max-exp-ret <= [matrix:get expected-returns evaluator-id who] of ? [
-                    ifelse max-exp-ret < [matrix:get expected-returns evaluator-id who] of ? [
-                      set max-exp-ret [matrix:get expected-returns evaluator-id who] of ?
-                      set e-partners (list ?)
+              foreach unmatched-firms [ ??1 ->
+                if [not matched] of ??1 [
+                  if max-exp-ret <= [matrix:get expected-returns evaluator-id who] of ??1 [
+                    ifelse max-exp-ret < [matrix:get expected-returns evaluator-id who] of ??1 [
+                      set max-exp-ret [matrix:get expected-returns evaluator-id who] of ??1
+                      set e-partners (list ??1)
                     ]
                     [
-                      set e-partners fput ? e-partners
+                      set e-partners fput ??1 e-partners
                     ]
                   ]
                 ]
               ]
-              foreach e-partners [
-                ask ? [
+              foreach e-partners [ ??1 ->
+                ask ??1 [
                   set a-partners fput myself a-partners
                 ]
               ]
@@ -432,11 +432,11 @@ to calc-matching
         ]
       ]
     ]
-            
+
   ]
-  
+
   if num-additions > 0 [ set mean-additions sum-additions / num-additions ]
-  
+
 end
 
 to calc-matching-alt
@@ -449,19 +449,19 @@ to calc-matching-alt
   set num-additions 0
   set sum-additions 0
 
-  foreach ordered-firms [
-    set ego ?
-    set evaluator-id [who] of ?
+  foreach ordered-firms [ ?1 ->
+    set ego ?1
+    set evaluator-id [who] of ?1
     ;ask ego [set matched false]
-    foreach ordered-firms [
-      set possible-pairings fput (array:from-list (list ego ? ([matrix:get expected-returns evaluator-id who] of ?))) possible-pairings
+    foreach ordered-firms [ ??1 ->
+      set possible-pairings fput (array:from-list (list ego ??1 ([matrix:get expected-returns evaluator-id who] of ??1))) possible-pairings
     ]
   ]
-  
+
   let num-matched 0
   while [num-matched < number-of-firms] [
-    set best-exp-ret max map [array:item ? 2] possible-pairings
-    set current-pairing one-of filter [best-exp-ret = array:item ? 2] possible-pairings
+    set best-exp-ret max map [ ?1 -> array:item ?1 2 ] possible-pairings
+    set current-pairing one-of filter [ ?1 -> best-exp-ret = array:item ?1 2 ] possible-pairings
     set ego array:item current-pairing 0
     set alter array:item current-pairing 1
     ask ego [set matched true]
@@ -473,25 +473,25 @@ to calc-matching-alt
       set num-matched num-matched + 2
     ]
     attempt-innovation ego alter
-    
-    set possible-pairings filter [not ((member? ego (array:to-list ?)) or (member? alter (array:to-list ?)))] possible-pairings
+
+    set possible-pairings filter [ ?1 -> not ((member? ego (array:to-list ?1)) or (member? alter (array:to-list ?1))) ] possible-pairings
   ]
-  
+
   if num-additions > 0 [ set mean-additions sum-additions / num-additions ]
-  
+
 end
 
 to calc-matching-old
   set num-additions 0
   set sum-additions 0
-  
+
   let evaluator-id 0
   ask firms [
     set matched false
     set evaluator-id who
-    set e-partners sort-by [([matrix:get expected-returns evaluator-id who] of ?1) > ([matrix:get expected-returns evaluator-id who] of ?2)] firms
+    set e-partners sort-by [ [?1 ?2] -> ([matrix:get expected-returns evaluator-id who] of ?1) > ([matrix:get expected-returns evaluator-id who] of ?2) ] firms
   ]
-  
+
   let ego nobody
   let alter nobody
   let num-matched 0
@@ -513,9 +513,9 @@ to calc-matching-old
     ]
     attempt-innovation ego alter
   ]
-  
+
   if num-additions > 0 [ set mean-additions sum-additions / num-additions ]
-  
+
 end
 
 to attempt-innovation [ego alter]
@@ -524,21 +524,21 @@ to attempt-innovation [ego alter]
   let prob-s 0
   matrix:set a-freq ego-id alter-id (1 + matrix:get a-freq ego-id alter-id) ; Should we count only alliances with innov. successes?
   matrix:set a-freq alter-id ego-id (matrix:get a-freq ego-id alter-id)
-  
+
   ifelse ego = alter [
     set prob-s max-probability-success
   ]
   [
     set prob-s (matrix:get probability-success ego-id alter-id)
   ]
-  
+
   ifelse (random-float 1) < prob-s [
     ; Success!
     matrix:set a-outcome ego-id alter-id 1
     matrix:set a-outcome alter-id ego-id 1
     matrix:set a-time ego-id alter-id ticks
     matrix:set a-time alter-id ego-id ticks
-    
+
     let weights []
     let cur-element -1
     repeat number-of-knowledge-types [
@@ -546,20 +546,20 @@ to attempt-innovation [ego alter]
       set weights fput (knowledge-element ego alter cur-element) weights
     ]
     let weight-sum random-float sum weights
-    set cur-element number-of-knowledge-types 
+    set cur-element number-of-knowledge-types
     while [weight-sum >= 0] [
       set cur-element cur-element - 1
       set weight-sum weight-sum - first weights
       set weights but-first weights
     ]
     let k-addition (matrix:get created-knowledge ego-id alter-id)
-    
+
     ask ego [
       ; Is knowledge supposed to be bounded or unbounded? continuous or discrete? Paper was unclear!
 ;      array:set knowledge cur-element (ifelse-value (k-addition + (array:item knowledge cur-element) <= 2) [k-addition + (array:item knowledge cur-element)] [2])
       array:set knowledge cur-element (k-addition + (array:item knowledge cur-element))
 ;      array:set knowledge cur-element k-addition
-      
+
       if ego = alter [
         set num-self-successes num-self-successes + 1
       ]
@@ -632,13 +632,13 @@ to recreate-net
   let alter-id 0
   let ego nobody
   let alter nobody
-  foreach ordered-firms [
-    set ego ?
-    set ego-id [who] of ?
-    foreach ordered-firms [
-      if ? != ego [
-        set alter ?
-        set alter-id [who] of ?
+  foreach ordered-firms [ ?1 ->
+    set ego ?1
+    set ego-id [who] of ?1
+    foreach ordered-firms [ ??1 ->
+      if ??1 != ego [
+        set alter ??1
+        set alter-id [who] of ??1
 ;        ifelse 1 = matrix:get a-outcome ego-id alter-id [
 ;        ifelse 0 < matrix:get a-freq ego-id alter-id [
         ifelse 1 = matrix:get a-dos ego-id alter-id [
@@ -649,7 +649,7 @@ to recreate-net
           ]
         ]
         [
-          ask ego [ 
+          ask ego [
             if alink-neighbor? alter [
               ask alink-with alter [ die ]
             ]
@@ -664,14 +664,14 @@ end
 ; Networks
 ;; Repositioning an already created network
 to reposition-nodes-spring
-  ;layout-spring turtle-set link-set spring-constant spring-length repulsion-constant 
+  ;layout-spring turtle-set link-set spring-constant spring-length repulsion-constant
   repeat 10 [layout-spring firms alinks 0.2 (1.5 * max-pxcor / (sqrt count firms)) 1]
-  
+
 end
 
 to reposition-nodes-circle
   layout-circle (sort firms) (max-pxcor * 0.4)
-  
+
 end
 
 to reposition-nodes-grid
@@ -682,15 +682,15 @@ to reposition-nodes-grid
   if (numcols * numrows) < numnodes [set numrows numrows + 1]
   let xspace (max-pxcor / (numcols + 1))
   let yspace (max-pycor / (numrows + 1))
-  
+
   let orderedset sort firms
-  foreach orderedset [
-    ask ? [
+  foreach orderedset [ ?1 ->
+    ask ?1 [
       set xcor (xspace * (1 + (who mod numcols)))
       set ycor (yspace * (1 + int (who / numcols)))
     ]
   ]
-  
+
 end
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -709,7 +709,7 @@ to calc-metrics
     calc-cliquishness
     calc-dos
   ]
-  
+
 end
 
 to calc-degree
@@ -717,12 +717,12 @@ to calc-degree
   ask firms [
     set degree (count my-alinks)
   ]
-  
+
   set mean-degree mean [degree] of firms
   set min-degree min [degree] of firms
   set max-degree max [degree] of firms
   set median-degree median [degree] of firms
-  
+
 end
 
 to calc-net-constraint
@@ -742,7 +742,7 @@ to calc-net-constraint
         ]
       ]
       set csum (csum + (cij ^ 2))
-      
+
     ]
     set constraint csum
   ]
@@ -751,7 +751,7 @@ to calc-net-constraint
   set min-constraint min [constraint] of firms
   set max-constraint max [constraint] of firms
 end
-  
+
 
 to calc-cliquishness
   ; Node cliquishness = proportion of 2-stars that are triangles
@@ -762,7 +762,7 @@ to calc-cliquishness
   let tot-num-triangles 0
   let tot-num-2stars 0
   let temp-neighbors nobody
-  
+
   ask firms [
     set num-triangles 0
     set num-2stars 0
@@ -780,7 +780,7 @@ to calc-cliquishness
       ]
     ]
     set num-2stars (count alink-neighbors) * ((count alink-neighbors) - 1)
-    
+
     ifelse (num-2stars = 0) [
       set cliquishness 0
     ]
@@ -790,14 +790,14 @@ to calc-cliquishness
     set tot-num-triangles tot-num-triangles + num-triangles
     set tot-num-2stars tot-num-2stars + num-2stars
   ]
-  
+
   set mean-cliquishness mean [cliquishness] of firms
   set min-cliquishness min [cliquishness] of firms
   set max-cliquishness max [cliquishness] of firms
   if tot-num-2stars > 0 [
     set clust-coeff tot-num-triangles / tot-num-2stars
   ]
-  
+
 end
 
 to calc-assortativity
@@ -838,7 +838,7 @@ to calc-assortativity
   [
     set assortativity 0
   ]
-   
+
 end
 
 to calc-betweenness
@@ -857,9 +857,9 @@ to calc-betweenness
   let w-who 0
   let maxdos 0
 ;  let denominator (((count firms) - 1) * ((count firms) - 2) / 2)
-  let denominator ((count firms) - 1) * ((count firms) - 2) 
+  let denominator ((count firms) - 1) * ((count firms) - 2)
   set net-diameter -1
-  
+
   ask firms [
     set S []
     ask firms [ set predecessors [] ]
@@ -887,14 +887,14 @@ to calc-betweenness
         ]
       ]
     ]
-    
+
     set dep array:from-list n-values (count firms) [0]
     while [(length S) > 0] [
       set w first S
       set S but-first S
       set w-who [who] of w
-      foreach [predecessors] of w [
-        ask ? [
+      foreach [predecessors] of w [ ?1 ->
+        ask ?1 [
           array:set dep who (array:item dep who) + (((array:item R who) / (array:item R w-who)) * (1 + array:item dep w-who))
         ]
       ]
@@ -902,7 +902,7 @@ to calc-betweenness
         array:set CB w-who ((array:item CB w-who) + (array:item dep w-who))
       ]
     ]
-    set reach sum map [ifelse-value (? >= 0) [1] [0]] (array:to-list d)
+    set reach sum map [ ?1 -> ifelse-value (?1 >= 0) [1] [0] ] (array:to-list d)
     set dos (sum (array:to-list d)) / reach
     set closeness ifelse-value (dos <= 0) [-1] [(reach - 1) / (dos * reach)]
     set maxdos max (array:to-list d)
@@ -916,19 +916,19 @@ to calc-betweenness
   set mean-dos mean [dos] of firms
   set min-dos min [dos] of firms
   set max-dos max [dos] of firms
-  
+
   set mean-closeness mean [closeness] of firms
   set min-closeness min [closeness] of firms
   set max-closeness max [closeness] of firms
-  
+
   set mean-betweenness mean [betweenness] of firms
   set min-betweenness min [betweenness] of firms
   set max-betweenness max [betweenness] of firms
-  
+
   set degree-centralization number-of-firms * (max-degree - mean-degree) / ((number-of-firms - 1) * (number-of-firms - 2))
   set closeness-centralization number-of-firms * (max-closeness - mean-closeness) * (2 * number-of-firms - 3) / ((number-of-firms - 1) * (number-of-firms - 2))
-  
-end  
+
+end
 
 to calc-dos
 ; From Ulrik Brandes's betweenness algorithm
@@ -939,7 +939,7 @@ to calc-dos
   let v-who 0
   let maxdos 0
   set net-diameter -1
-  
+
   ask firms [
     set d array:from-list n-values (count firms) [-1]
     array:set d who 0
@@ -956,8 +956,8 @@ to calc-dos
         ]
       ]
     ]
-    
-    set reach sum map [ifelse-value (? >= 0) [1] [0]] (array:to-list d)
+
+    set reach sum map [ ?1 -> ifelse-value (?1 >= 0) [1] [0] ] (array:to-list d)
     set dos (sum (array:to-list d)) / reach
     set closeness ifelse-value (dos <= 0) [0] [(reach - 1) / (dos * reach)]
     set maxdos max (array:to-list d)
@@ -967,22 +967,22 @@ to calc-dos
   set mean-dos mean [dos] of firms; with [dos >= 0]
   set min-dos min [dos] of firms; with [dos >= 0]
   set max-dos max [dos] of firms; with [dos >= 0]
-  
+
   set mean-closeness mean [closeness] of firms
   set min-closeness min [closeness] of firms
   set max-closeness max [closeness] of firms
-  
+
   set degree-centralization number-of-firms * (max-degree - mean-degree) / ((number-of-firms - 1) * (number-of-firms - 2))
   set closeness-centralization number-of-firms * (max-closeness - mean-closeness) * (2 * number-of-firms - 3) / ((number-of-firms - 1) * (number-of-firms - 2))
 
-end  
+end
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 to calc-components
   ; Calculate a network component for each node, and the size of the largest component
   let nodestack []
   let tempnode nobody
   let num-members 0
-  
+
   set num-components 0
   set max-component 0
   ask firms [ set component 0]
@@ -992,12 +992,12 @@ to calc-components
       set num-components num-components + 1
       if (num-members > max-component) [set max-component num-members]
       set num-members 1
-      
+
       set component num-components
       ask alink-neighbors with [component = 0] [
         set nodestack fput self nodestack
       ]
-      
+
       while [not empty? nodestack] [
         set tempnode first nodestack
         set nodestack but-first nodestack
@@ -1011,25 +1011,25 @@ to calc-components
           ]
         ]
       ]
-      
+
     ]
   ]
   if (num-members > max-component) [set max-component num-members]
-  
+
 end
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Plots
 to my-update-plots
   set-current-plot "Innovation Production"
   plotxy ticks mean-additions
-  
+
   set-current-plot "Knowledge"
   set prev-mean-knowledge mean-knowledge
   set mean-knowledge mean [mean array:to-list knowledge] of firms
   plotxy ticks mean-knowledge
   set-current-plot "Knowledge Growth"
   plotxy ticks ifelse-value (prev-mean-knowledge = 0) [0] [100 * (((mean-knowledge / prev-mean-knowledge) ^ (1 / output-every)) - 1)]
-  
+
   set-current-plot "Density"
   plotxy ticks net-density
 
@@ -1041,11 +1041,11 @@ to my-update-plots
 
   set-current-plot "Clustering Coefficient"
   plotxy ticks clust-coeff
-  
+
   set-current-plot "Degree Centralization"
   plotxy ticks degree-centralization
 
-  set-current-plot "Degree of Connectivity"
+  set-current-plot "Degree Connectivity"
   set-current-plot-pen "Mean"
   plotxy ticks mean-degree
   set-current-plot-pen "Min"
@@ -1060,12 +1060,12 @@ to my-update-plots
   plotxy ticks min-dos
   set-current-plot-pen "Max"
   plotxy ticks max-dos
-  
+
 end
 
 to print-knowledge
-  foreach sort firms [
-    ask ? [
+  foreach sort firms [ ?1 ->
+    ask ?1 [
       show (array:to-list knowledge)
     ]
   ]
@@ -1085,8 +1085,8 @@ end
 GRAPHICS-WINDOW
 230
 10
-669
-470
+667
+448
 -1
 -1
 13.0
@@ -1135,7 +1135,7 @@ INPUTBOX
 161
 146
 Number-of-Firms
-100
+100.0
 1
 0
 Number
@@ -1149,7 +1149,7 @@ Number-of-Knowledge-Types
 Number-of-Knowledge-Types
 2
 10
-5
+5.0
 1
 1
 NIL
@@ -1254,7 +1254,7 @@ INPUTBOX
 385
 533
 Number-of-Time-Steps
-200
+200.0
 1
 0
 Number
@@ -1554,7 +1554,7 @@ INPUTBOX
 163
 664
 Output-Every
-1
+1.0
 1
 0
 Number
@@ -2063,9 +2063,8 @@ false
 0
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
-
 @#$#@#$#@
-NetLogo 5.0.4
+NetLogo 6.4.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
@@ -2195,15 +2194,14 @@ NetLogo 5.0.4
 @#$#@#$#@
 default
 0.0
--0.2 0 1.0 0.0
+-0.2 0 0.0 1.0
 0.0 1 1.0 0.0
-0.2 0 1.0 0.0
+0.2 0 0.0 1.0
 link direction
 true
 0
 Line -7500403 true 150 150 90 180
 Line -7500403 true 150 150 210 180
-
 @#$#@#$#@
 0
 @#$#@#$#@
